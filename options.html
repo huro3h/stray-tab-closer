@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Stray Tab Closer の設定</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Stray Tab Closer</h1>
+      <p class="lead">
+        監視対象サイトから開かれた新しいタブが、<strong>ジャンプ元と別ドメイン</strong>かつ
+        <strong>許可リストにも無い</strong>とき、そのタブを自動で閉じます。
+        監視対象に入れていないサイトから開かれたタブには一切触りません。
+      </p>
+
+      <section>
+        <h2>監視対象サイト(ジャンプ元)</h2>
+        <p class="hint">広告タブが開くサイトのドメインを1行に1つ。</p>
+        <ul class="syntax">
+          <li><code>example.com</code><span>そのドメインとサブドメインに一致</span></li>
+          <li><code>*.example.com</code><span>サブドメインのみに一致</span></li>
+          <li><code>*ad*</code><span>ホスト名の部分一致</span></li>
+          <li><code>news.*.co.jp</code><span>途中のワイルドカード</span></li>
+        </ul>
+        <p class="hint"><code>*</code> は任意の文字列 (ドットを含む) に一致します。</p>
+        <textarea id="sourceDomains" rows="7" spellcheck="false"
+          placeholder="example.com&#10;*.news.example.jp&#10;*matome*"></textarea>
+        <label class="check">
+          <input type="checkbox" id="watchAllSources" />
+          <span>すべてのサイトを監視対象にする(上のリストを無視)</span>
+        </label>
+      </section>
+
+      <section>
+        <h2>許可リスト(行き先)</h2>
+        <p class="hint">
+          別ドメインでも閉じたくない行き先を1行に1つ。ログイン用の別ドメインや
+          SNS の共有先などを入れておきます。書き方は上と同じで、
+          ワイルドカード <code>*</code> も使えます。
+        </p>
+        <textarea id="allowDomains" rows="7" spellcheck="false"
+          placeholder="accounts.google.com&#10;x.com"></textarea>
+      </section>
+
+      <section>
+        <h2>判定する時間</h2>
+        <p class="hint">
+          タブが開かれてからこの秒数の間だけ判定します。過ぎたタブは、
+          その後どこへ移動しても閉じません(残ったタブの中で自分で踏んだリンクを
+          巻き込まないための猶予)。
+        </p>
+        <label class="inline">
+          <input type="number" id="graceSec" min="1" max="60" step="1" />
+          <span>秒</span>
+        </label>
+      </section>
+
+      <div class="actions">
+        <button id="save" class="primary">保存</button>
+        <span class="status" id="status"></span>
+      </div>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

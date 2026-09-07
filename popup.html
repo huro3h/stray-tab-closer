@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="row">
+      <strong class="title">別ドメインのタブを自動で閉じる</strong>
+      <label class="switch">
+        <input type="checkbox" id="enabled" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="block">
+      <div class="row">
+        <span class="label">このサイトを監視する</span>
+        <label class="switch small">
+          <input type="checkbox" id="watchThisSite" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <p class="state" id="siteState">—</p>
+    </div>
+
+    <div class="block">
+      <div class="row">
+        <span class="label">最近閉じたタブ</span>
+        <button class="link" id="clearLog" hidden>消去</button>
+      </div>
+      <ul class="log" id="log"></ul>
+      <p class="empty" id="logEmpty">まだありません。</p>
+    </div>
+
+    <div class="footer">
+      <button class="link" id="openOptions">詳細設定を開く</button>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

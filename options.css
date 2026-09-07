@@ -1,0 +1,137 @@
+@import url("popup.css");
+
+body {
+  width: auto;
+  max-width: none;
+  padding: 0;
+  font-size: 14px;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+h2 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.lead {
+  margin: 0 0 8px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+section {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.hint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--field);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+
+textarea,
+input[type="number"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+textarea:focus,
+input[type="number"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline input[type="number"] {
+  width: 88px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.primary {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.primary:hover {
+  filter: brightness(1.06);
+}
+
+.status {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+/* コードと説明を2列で揃える。li を display: contents にして ul 側のグリッドに
+   参加させると、各行の code が中身なりの幅のまま列だけ揃う。 */
+.syntax {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.syntax li {
+  display: contents;
+}
+
+.syntax span {
+  color: var(--muted);
+}
