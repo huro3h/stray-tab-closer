@@ -78,6 +78,11 @@ input[type="number"]:focus {
   font-size: 13px;
 }
 
+/* チェックボックスの説明。ラベルの文字の位置にそろえる */
+.check + .hint {
+  margin: 4px 0 0 28px;
+}
+
 .inline {
   display: flex;
   align-items: center;

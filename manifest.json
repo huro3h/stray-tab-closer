@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
   "name": "Stray Tab Closer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "監視対象サイトから開かれた別ドメインのタブを自動で閉じる",
   "permissions": ["tabs", "storage"],
+  "optional_permissions": ["bookmarks"],
   "action": {
     "default_title": "Stray Tab Closer",
     "default_popup": "popup.html",

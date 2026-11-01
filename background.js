@@ -1,4 +1,11 @@
-import { getSettings, decide, isWatchedSource, hostOf, registrableDomain } from "./rules.js";
+import {
+  getSettings,
+  decide,
+  isWatchedSource,
+  hostOf,
+  registrableDomain,
+  bookmarkedDomains,
+} from "./rules.js";
 
 const LOG_LIMIT = 20;
 
@@ -68,6 +75,48 @@ async function recordClosed(entry) {
   chrome.action.setBadgeBackgroundColor({ color: "#D93025" });
 }
 
+// ── ブックマーク ─────────────────────────────────────────
+// bookmarks は任意権限。設定がオンでも、権限が無ければ (別の端末から設定だけ
+// 同期されてきた場合など) 使わない。
+// 判定のたびにツリー全体を辿らないよう、登録可能ドメインの Set をメモリに持ち、
+// ブックマークが変わったら捨てる。SW が落ちれば消えるが、作り直すだけでよい。
+let bookmarkCache = null;
+let bookmarkListening = false;
+
+function invalidateBookmarks() {
+  bookmarkCache = null;
+}
+
+function listenBookmarks() {
+  if (bookmarkListening || !chrome.bookmarks) return;
+  bookmarkListening = true;
+  for (const event of ["onCreated", "onRemoved", "onChanged", "onImportEnded"]) {
+    chrome.bookmarks[event].addListener(invalidateBookmarks);
+  }
+}
+
+async function getBookmarked(settings) {
+  if (!settings.allowBookmarked) return null;
+  if (!(await chrome.permissions.contains({ permissions: ["bookmarks"] }))) return null;
+  listenBookmarks();
+  if (bookmarkCache) return bookmarkCache;
+
+  const urls = [];
+  const walk = (nodes) => {
+    for (const node of nodes) {
+      if (node.url) urls.push(node.url);
+      if (node.children) walk(node.children);
+    }
+  };
+  walk(await chrome.bookmarks.getTree());
+  bookmarkCache = bookmarkedDomains(urls);
+  return bookmarkCache;
+}
+
+chrome.permissions.onAdded.addListener(invalidateBookmarks);
+chrome.permissions.onRemoved.addListener(invalidateBookmarks);
+listenBookmarks();
+
 // ── 判定と実行 ───────────────────────────────────────────
 async function evaluate(tabId, url, status) {
   const map = await ensureWatching();
@@ -87,7 +136,8 @@ async function evaluate(tabId, url, status) {
     return;
   }
 
-  const { action, reason } = decide(url, entry.openerUrl, settings);
+  const bookmarked = await getBookmarked(settings);
+  const { action, reason } = decide(url, entry.openerUrl, settings, bookmarked);
 
   if (action === "close") {
     const tab = await chrome.tabs.get(tabId).catch(() => null);

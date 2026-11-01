@@ -136,10 +136,25 @@ permission 不要なので、この機能で権限は増えていない。
 スキーム無しで打たれた文字列は普通のホスト名と区別できないので通すが、
 `http(s)` のホストとしか照合されないので実害は無い。
 
+### ブックマークの除外は任意権限にした
+
+「ブックマークにあるサイトは閉じない」(`allowBookmarked`) は `bookmarks` 権限が要る。
+必須にするとインストール時に「ブックマークの読み取りと変更」の警告が出て、
+`["tabs", "storage"]` に抑えてきた方針が崩れるので **`optional_permissions`** にし、
+詳細設定でチェックした瞬間に `permissions.request()` する (ユーザー操作の中でしか
+呼べないので保存ボタンではない)。オフにしたら `permissions.remove()` で返す。
+
+- 判定の粒度は同一ドメイン判定と同じ eTLD+1。`www.shop.com` をブックマークしていれば
+  `sale.shop.com` へのタブも残る。`decide()` の第4引数に `bookmarkedDomains()` の Set を渡す
+- background はドメインの Set をメモリにキャッシュし、`bookmarks.on*` と
+  `permissions.on*` で捨てる。SW が落ちたら作り直すだけ
+- 設定は sync で他端末に行くが権限は行かない。だから**設定値と権限の両方**を見る
+  (`getBookmarked()` / 詳細設定の表示)
+
 ## 設定
 
 `rules.js` の `DEFAULTS` が唯一の定義。`sourceDomains` / `watchAllSources` /
-`allowDomains` / `graceMs` / `enabled`。
+`allowDomains` / `allowBookmarked` / `graceMs` / `enabled`。
 
 ドメイン設定は `normalizeDomain()` で URL でもホスト名でも受ける (貼り付けた URL が
 そのまま通る)。マッチは `domainMatches()` = 完全一致 + サブドメイン。
@@ -210,6 +225,15 @@ node --test test/rules.test.mjs
 - ポップアップを**タブとして開いて撮影**するときは、`chrome.tabs.query({active:true})`
   が自分自身を指してしまう。対象サイトのタブを `bringToFront()` してから
   ポップアップのタブを `reload()` すると、実際の見え方で撮れる
+
+- **任意権限の許可ダイアログは自動で押せない。** ブックマーク関連の実機テストは、
+  拡張をスクラッチパッドへコピーして manifest の `permissions` に `bookmarks` を足した版で行い、
+  `sw.evaluate(() => chrome.bookmarks.create(...))` でブックマークを作る。本物の manifest では
+  「権限が無ければ設定オンでも閉じる」ことを確かめる
+
+ブックマーク除外 (1.1.0) で追加確認したケース (実機8件 / 単体17件):
+ブックマーク済みドメインは残す / 設定オフなら閉じる / ブックマーク削除後は閉じる /
+権限が無ければ設定オンでも閉じる / 詳細設定は権限が無ければオフ表示。
 
 1.0.0 時点で確認済みのケース (実機21件 / 単体15件):
 

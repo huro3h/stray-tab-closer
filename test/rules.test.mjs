@@ -11,6 +11,7 @@ import {
   domainMatches,
   isWatchedSource,
   decide,
+  bookmarkedDomains,
 } from "../rules.js";
 
 const settings = (over = {}) => ({ ...DEFAULTS, ...over });
@@ -162,4 +163,25 @@ test("decide: 判断材料が無いときは残す", () => {
     decide("chrome-extension://abc/page.html", "https://example.com", settings()).action,
     "keep",
   );
+});
+
+test("bookmarkedDomains: http(s) だけを登録可能ドメインにまとめる", () => {
+  const set = bookmarkedDomains([
+    "https://www.example.com/a",
+    "http://shop.example.co.jp/",
+    "chrome://settings",
+    "javascript:alert(1)",
+    "file:///a.html",
+  ]);
+  assert.deepEqual([...set].sort(), ["example.co.jp", "example.com"]);
+});
+
+test("decide: ブックマークにあるサイトは残す", () => {
+  const from = "https://matome.example.jp/1";
+  const bookmarked = bookmarkedDomains(["https://www.shop.com/"]);
+  // サブドメイン違いも同じサイトとして残す
+  assert.equal(decide("https://sale.shop.com/x", from, settings(), bookmarked).action, "keep");
+  assert.equal(decide("https://ads.example.net/", from, settings(), bookmarked).action, "close");
+  // 渡さなければ従来どおり
+  assert.equal(decide("https://sale.shop.com/x", from, settings()).action, "close");
 });

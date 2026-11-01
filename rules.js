@@ -14,6 +14,9 @@ export const DEFAULTS = {
   // タブが開かれてから何ミリ秒までを「開かれた直後」とみなすか。
   // この時間を過ぎたタブは、以後どこへ遷移しても触らない。
   graceMs: 10000,
+  // ブックマークにあるサイトへのタブは閉じない。bookmarks は任意権限なので、
+  // 設定画面でオンにしたとき (= 権限を許可したとき) だけ有効になる。
+  allowBookmarked: false,
 };
 
 export async function getSettings() {
@@ -140,6 +143,19 @@ export function matchesAny(url, patterns) {
   return patterns.some((p) => domainMatches(host, p));
 }
 
+// ブックマークの URL 群を、登録可能ドメインの Set にまとめる。
+// 判定は同一ドメインと同じ粒度 (eTLD+1) にそろえる。www.example.com を
+// ブックマークしていれば shop.example.com へのタブも残す。
+export function bookmarkedDomains(urls) {
+  const set = new Set();
+  for (const url of urls) {
+    if (!isHttpUrl(url)) continue;
+    const domain = registrableDomain(hostOf(url));
+    if (domain) set.add(domain);
+  }
+  return set;
+}
+
 // ── 判定 ─────────────────────────────────────────────────
 
 // 遷移の途中状態。まだ行き先が確定していないので結論を出さない。
@@ -169,7 +185,8 @@ export function isWatchedSource(openerUrl, settings) {
 
 // 開かれた直後のタブをどう扱うか。
 //   "close" 閉じる / "keep" 見逃す (以後このタブは触らない) / "wait" まだ決めない
-export function decide(targetUrl, openerUrl, settings) {
+// bookmarked は bookmarkedDomains() の結果。ブックマークを使わないときは渡さない。
+export function decide(targetUrl, openerUrl, settings, bookmarked = null) {
   if (!targetUrl || BLANK_URL.test(targetUrl)) return { action: "wait" };
 
   // chrome-extension:// や chrome:// のページは閉じにいかない。
@@ -183,6 +200,9 @@ export function decide(targetUrl, openerUrl, settings) {
   }
   if (matchesAny(targetUrl, settings.allowDomains)) {
     return { action: "keep", reason: "allowed" };
+  }
+  if (bookmarked?.has(registrableDomain(hostOf(targetUrl)))) {
+    return { action: "keep", reason: "bookmarked" };
   }
   return { action: "close", reason: "stray" };
 }

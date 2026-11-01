@@ -2,6 +2,8 @@ import { DEFAULTS, getSettings, normalizeDomain } from "./rules.js";
 
 const $ = (id) => document.getElementById(id);
 
+const BOOKMARKS = { permissions: ["bookmarks"] };
+
 // テキストエリアの1行1ドメイン。空行・重複・書式ゆれはここで吸収する。
 function parseList(text) {
   const out = [];
@@ -17,6 +19,9 @@ async function load() {
   $("sourceDomains").value = settings.sourceDomains.join("\n");
   $("allowDomains").value = settings.allowDomains.join("\n");
   $("watchAllSources").checked = settings.watchAllSources;
+  // 設定だけ同期されてきて、この端末では権限が無い場合はオフとして見せる。
+  $("allowBookmarked").checked =
+    settings.allowBookmarked && (await chrome.permissions.contains(BOOKMARKS));
   $("graceSec").value = Math.round(settings.graceMs / 1000);
 }
 
@@ -32,6 +37,7 @@ async function save() {
     sourceDomains,
     allowDomains,
     watchAllSources: $("watchAllSources").checked,
+    allowBookmarked: $("allowBookmarked").checked,
     graceMs,
   });
 
@@ -44,6 +50,18 @@ async function save() {
   status.textContent = "保存しました";
   setTimeout(() => (status.textContent = ""), 1800);
 }
+
+// permissions.request はユーザー操作の中でしか呼べないので、保存ボタンではなく
+// チェックした瞬間に求める。断られたらチェックを戻す。
+// オフにしたときは権限も返す (使わない権限を持ち続けない)。
+$("allowBookmarked").addEventListener("change", async (e) => {
+  const box = e.target;
+  if (box.checked) {
+    box.checked = await chrome.permissions.request(BOOKMARKS).catch(() => false);
+  } else {
+    await chrome.permissions.remove(BOOKMARKS).catch(() => {});
+  }
+});
 
 $("save").addEventListener("click", save);
 load();
